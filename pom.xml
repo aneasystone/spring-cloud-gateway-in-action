@@ -9,5 +9,6 @@
 	<modules>
 		<module>gateway-basic</module>
 		<module>gateway-test-http</module>
+		<module>gateway-request-logging</module>
 	</modules>
 </project>
