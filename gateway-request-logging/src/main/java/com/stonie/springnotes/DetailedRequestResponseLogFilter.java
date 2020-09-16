@@ -24,6 +24,11 @@ import java.net.URI;
 import java.nio.charset.StandardCharsets;
 import java.util.List;
 
+/**
+ * https://github.com/spring-cloud/spring-cloud-gateway/issues/1003
+ * https://gist.github.com/matzegebbe/bf631b2d3ab6d55f58f4b6c1d3511189
+ *
+ */
 @Component
 public class DetailedRequestResponseLogFilter implements GlobalFilter, Ordered {
 
