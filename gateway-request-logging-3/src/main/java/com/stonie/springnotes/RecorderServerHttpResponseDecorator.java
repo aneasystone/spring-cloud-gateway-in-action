@@ -1,16 +1,15 @@
 package com.stonie.springnotes;
 
+import com.stonie.springnotes.util.DataBufferUtilFix;
+import com.stonie.springnotes.util.DataBufferWrapper;
 import org.reactivestreams.Publisher;
 import org.springframework.core.io.buffer.DataBuffer;
-import org.springframework.core.io.buffer.DataBufferFactory;
-import org.springframework.core.io.buffer.DataBufferUtils;
 import org.springframework.http.server.reactive.ServerHttpResponse;
 import org.springframework.http.server.reactive.ServerHttpResponseDecorator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
 public class RecorderServerHttpResponseDecorator extends ServerHttpResponseDecorator {
-
     private DataBufferWrapper data = null;
 
     public RecorderServerHttpResponseDecorator(ServerHttpResponse delegate) {
@@ -19,7 +18,7 @@ public class RecorderServerHttpResponseDecorator extends ServerHttpResponseDecor
 
     @Override
     public Mono<Void> writeWith(Publisher<? extends DataBuffer> body) {
-        return DataBufferUtils.join(Flux.from(body))
+        return DataBufferUtilFix.join(Flux.from(body))
                 .doOnNext(d -> this.data = d)
                 .flatMap(d -> super.writeWith(copy()));
     }
@@ -37,40 +36,5 @@ public class RecorderServerHttpResponseDecorator extends ServerHttpResponseDecor
             return Flux.empty();
 
         return Flux.just(buffer);
-    }
-}
-
-class DataBufferWrapper {
-    private byte[] data;
-    private DataBufferFactory factory;
-
-    public DataBufferWrapper() {
-    }
-
-    public DataBufferWrapper(byte[] data, DataBufferFactory factory) {
-        this.data = data;
-        this.factory = factory;
-    }
-
-    public byte[] getData() {
-        return data;
-    }
-
-    public DataBufferFactory getFactory() {
-        return factory;
-    }
-
-    public DataBuffer newDataBuffer() {
-        if (factory == null)
-            return null;
-
-        return factory.wrap(data);
-    }
-
-    public Boolean clear() {
-        data = null;
-        factory = null;
-
-        return Boolean.TRUE;
     }
 }

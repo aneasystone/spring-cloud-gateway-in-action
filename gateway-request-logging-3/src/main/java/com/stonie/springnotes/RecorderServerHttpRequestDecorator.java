@@ -1,19 +1,15 @@
 package com.stonie.springnotes;
 
+import com.stonie.springnotes.util.DataBufferUtilFix;
+import com.stonie.springnotes.util.DataBufferWrapper;
 import org.springframework.core.io.buffer.DataBuffer;
 import org.springframework.http.server.reactive.ServerHttpRequest;
 import org.springframework.http.server.reactive.ServerHttpRequestDecorator;
 import reactor.core.publisher.Flux;
 import reactor.core.publisher.Mono;
 
-import java.util.LinkedList;
-import java.util.List;
-
 public class RecorderServerHttpRequestDecorator extends ServerHttpRequestDecorator {
-
-    private final List<DataBuffer> dataBuffers = new LinkedList<>();
-    private boolean bufferCached = false;
-    private Mono<Void> progress = null;
+    private DataBufferWrapper data = null;
 
     public RecorderServerHttpRequestDecorator(ServerHttpRequest delegate) {
         super(delegate);
@@ -21,31 +17,18 @@ public class RecorderServerHttpRequestDecorator extends ServerHttpRequestDecorat
 
     @Override
     public Flux<DataBuffer> getBody() {
-        synchronized (dataBuffers) {
-            if (bufferCached)
-                return copy();
-
-            if (progress == null) {
-                progress = cache();
+        synchronized (this) {
+            Mono<DataBuffer> mono = null;
+            if (data == null) {
+                mono = DataBufferUtilFix.join(super.getBody())
+                        .doOnNext(d -> this.data = d)
+                        .filter(d -> d.getFactory() != null)
+                        .map(DataBufferWrapper::newDataBuffer);
+            } else {
+                mono = Mono.justOrEmpty(data.newDataBuffer());
             }
 
-            return progress.thenMany(Flux.defer(this::copy));
+            return Flux.from(mono);
         }
-    }
-
-    private Flux<DataBuffer> copy() {
-        return Flux.fromIterable(dataBuffers)
-                .map(buf -> buf.factory().wrap(buf.asByteBuffer()));
-    }
-
-    private Mono<Void> cache() {
-        return super.getBody()
-                .map(dataBuffers::add)
-                .then(Mono.defer(()-> {
-                    bufferCached = true;
-                    progress = null;
-
-                    return Mono.empty();
-                }));
     }
 }
