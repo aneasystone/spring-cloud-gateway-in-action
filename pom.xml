@@ -11,5 +11,8 @@
 		<module>gateway-test-http</module>
 		<module>gateway-test-websocket</module>
 		<module>gateway-request-logging</module>
+		<module>gateway-request-logging-2</module>
+		<module>gateway-request-logging-3</module>
+		<module>gateway-request-logging-4</module>
 	</modules>
 </project>
