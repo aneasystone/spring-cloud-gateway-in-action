@@ -13,12 +13,14 @@ public class GatewayApp {
         SpringApplication.run(GatewayApp.class, args);
     }
 
+    /**
+     * curl -H Content-Type:application/json -X POST --data '{"hello":"world"}' http://127.0.0.1:8080/post
+     */
     @Bean
     public RouteLocator myRoutes(RouteLocatorBuilder builder) {
         return builder.routes()
                 .route(p -> p
-                        .path("/get")
-                        .filters(f -> f.addRequestHeader("Hello", "World"))
+                        .path("/post")
                         .uri("http://httpbin.org:80"))
                 .build();
     }
